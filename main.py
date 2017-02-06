@@ -1,4 +1,5 @@
 from nltk.corpus import brown
+from HMMTagger import HMMTagger
 
 def show_sent(sent):
     print sent
@@ -13,5 +14,6 @@ def compare(detected_tags_lst, original_tags_lst):
     return (sum([1 if x == y else 0 for x, y in zip(detected_tags, original_tags)]), len(original_tags))
 
 if __name__ == '__main__':
-    print compare([1, 2, 3], [4, 2, 6])
-    main()
+    #main()
+    t = HMMTagger()
+    t.tag([])
