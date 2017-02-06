@@ -4,5 +4,10 @@ class HMMTagger(object):
         self.n = n
 
     def tag(self, testing_tokens):
-        print "tagging"
         return []
+
+    def train(self, training_tokens):
+        history = []
+
+        for token in training_tokens:
+            context = tuple(history,  + [])
