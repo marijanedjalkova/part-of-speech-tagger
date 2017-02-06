@@ -9,6 +9,13 @@ def main():
     training_set = sents[:50000]
     testing_set = sents[50000:50500]
 
+def compare(detected_tags, original_tags):
+    return (sum([1 if x == y else 0 for x, y in zip(detected_tags, original_tags)]), len(original_tags))
+
+def calc_accuracy():
+    """ Calculate accuracy of the tagger """
+    pass
 
 if __name__ == '__main__':
+    print compare([1, 2, 3], [4, 2, 6])
     main()
