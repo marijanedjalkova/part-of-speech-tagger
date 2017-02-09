@@ -8,11 +8,12 @@ def show_sent(sent):
 def main():
     sents = brown.tagged_sents()
     # 57340 sentences
-    training_set = sents[:1]
+    training_set = sents[:50000]
     testing_set = sents[50000:50500]
-    t = HMMTagger(4)
+    t = HMMTagger(3)
     t.train(training_set)
-    print t.tag(word_tokenize("The Fulton County Grand Jury"))
+    new_tags = t.tag(word_tokenize("I love you."))
+    print new_tags
 
 
 def compare(detected_tags_lst, original_tags_lst):

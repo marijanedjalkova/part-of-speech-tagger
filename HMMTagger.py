@@ -10,12 +10,13 @@ class HMMTagger(object):
         res = []
         for token in tokens:
             context = res[-self.n:]
+            print "--context ", context
             res.append(self.next_tag(context, token))
         return res
 
     def train(self, training_sents):
-        history = []
         for sent in training_sents:
+            history = []
             for token in sent:
                 word = token[0]
                 tag = token[1]
@@ -24,8 +25,10 @@ class HMMTagger(object):
                 history.append(tag)
                 if len(history) == (self.n+1):
                     del history[0]
-        print self.freqDist.conditions()
 
     def next_tag(self, tagged_tokens, next_token):
         context = tuple(tagged_tokens + [next_token])
-        return self.freqDist[context].max()
+        if context in self.freqDist:
+            return self.freqDist[context].max()
+        else:
+            return None
