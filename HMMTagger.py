@@ -6,12 +6,12 @@ class HMMTagger(object):
         self.n = n
         self.freqDist = ConditionalFreqDist()
 
-    def tag(self, tokens):
+    def tag(self, tokenized_sents):
         res = []
-        for token in tokens:
-            context = res[-self.n:]
-            print "--context ", context
-            res.append(self.next_tag(context, token))
+        for sentence in tokenized_sents:
+            for token in sentence:
+                context = res[-self.n:]
+                res.append(self.next_tag(context, token))
         return res
 
     def train(self, training_sents):

@@ -9,15 +9,17 @@ def main():
     sents = brown.tagged_sents()
     # 57340 sentences
     training_set = sents[:50000]
-    testing_set = sents[50000:50500]
+    testing_set = sents[50000:50002]
     t = HMMTagger(3)
     t.train(training_set)
-    new_tags = t.tag(word_tokenize("I love you."))
-    print new_tags
+    test_words = [[w for (w,_) in sentence] for sentence in testing_set]
+    test_tags = [[tag for (_,tag) in sentence] for sentence in testing_set]
+    new_tags = t.tag(test_words)
+    print compare(new_tags, test_tags)
 
 
 def compare(detected_tags_lst, original_tags_lst):
-    return (sum([1 if x == y else 0 for x, y in zip(detected_tags, original_tags)]), len(original_tags))
+    return (sum([1 if x == y else 0 for x, y in zip(detected_tags_lst, original_tags_lst)]), len(original_tags_lst))
 
 if __name__ == '__main__':
     main()
