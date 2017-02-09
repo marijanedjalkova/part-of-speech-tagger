@@ -15,11 +15,21 @@ def main():
     test_words = [[w for (w,_) in sentence] for sentence in testing_set]
     test_tags = [[tag for (_,tag) in sentence] for sentence in testing_set]
     new_tags = t.tag(test_words)
-    print compare(new_tags, test_tags)
+    print compare(new_tags, test_tags), "%"
 
 
 def compare(detected_tags_lst, original_tags_lst):
-    return (sum([1 if x == y else 0 for x, y in zip(detected_tags_lst, original_tags_lst)]), len(original_tags_lst))
+    res = 0
+    total = 0;
+    for detected_sent, original_sent in zip(detected_tags_lst, original_tags_lst):
+        for detected, original in zip(detected_sent, original_sent):
+            total +=1
+            if detected == original:
+                res+=1
+    return (res*100.0)/(total*1.0)
+
+
+    #return (sum([1 if x == y else 0 for x, y in zip(detected, original) for detected in detected_tags_lst for original in original_tags_lst]), len(original_tags_lst))
 
 if __name__ == '__main__':
     main()

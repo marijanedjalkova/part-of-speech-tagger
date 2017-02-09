@@ -9,9 +9,11 @@ class HMMTagger(object):
     def tag(self, tokenized_sents):
         res = []
         for sentence in tokenized_sents:
+            tagged_sentence = []
             for token in sentence:
-                context = res[-self.n:]
-                res.append(self.next_tag(context, token))
+                context = tagged_sentence[-self.n:]
+                tagged_sentence.append(self.next_tag(context, token))
+            res.append(tagged_sentence)
         return res
 
     def train(self, training_sents):
@@ -28,7 +30,8 @@ class HMMTagger(object):
 
     def next_tag(self, tagged_tokens, next_token):
         context = tuple(tagged_tokens + [next_token])
+        print "context ", context
         if context in self.freqDist:
             return self.freqDist[context].max()
         else:
-            return None
+            return "UNK"
