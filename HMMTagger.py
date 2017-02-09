@@ -21,13 +21,10 @@ class HMMTagger(object):
                     del history[0]
 
     def next_tag(self, tagged_tokens, next_token):
-        # Find the tags of the n previous tokens.
         history = []
         start = max(len(tagged_tokens) - self.n, 0)
         for token in tagged_tokens[start:]:
-            history.append(token[1])
+            history.append(token)
 
-            context = tuple(history + [next_token.type()])
-            print "context:"
-            print context
-            return self.freqDist[context].max()
+        context = tuple(history + [next_token])
+        return self.freqDist[context].max()

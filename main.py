@@ -11,7 +11,7 @@ def main():
     testing_set = sents[50000:50500]
     t = HMMTagger()
     t.train(training_set)
-    print t.next_tag(["AP"], "sick")
+    print t.next_tag(['VBD', 'NN'], ".")
 
 
 
