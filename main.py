@@ -1,5 +1,6 @@
 from nltk.corpus import brown
 from HMMTagger import HMMTagger
+from nltk.tokenize import word_tokenize
 
 def show_sent(sent):
     print sent
@@ -7,12 +8,11 @@ def show_sent(sent):
 def main():
     sents = brown.tagged_sents()
     # 57340 sentences
-    training_set = sents[:50000]
+    training_set = sents[:1]
     testing_set = sents[50000:50500]
-    t = HMMTagger()
+    t = HMMTagger(4)
     t.train(training_set)
-    print t.next_tag(['VBD', 'NN'], ".")
-
+    print t.tag(word_tokenize("The Fulton County Grand Jury"))
 
 
 def compare(detected_tags_lst, original_tags_lst):
