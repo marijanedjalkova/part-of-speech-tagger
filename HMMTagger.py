@@ -2,7 +2,7 @@ from nltk import ConditionalFreqDist
 
 class HMMTagger(object):
 
-    def __init__(self, n=2):
+    def __init__(self, n=0):
         self.n = n
         self.freqDist = ConditionalFreqDist()
 
