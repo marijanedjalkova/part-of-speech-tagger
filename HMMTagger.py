@@ -14,13 +14,14 @@ class HMMTagger(object):
 		tags = []
 		for sent in self.tagged_sents:
 			tags.extend([t for (_,t) in sent])
+		self.tagset = set(tags)
 		# now tags is a list of tags
 		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
 		# TODO change from bigrams to ngrams
 		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
 
 	def construct_ngram_freqDist(self):
-		""" Conditions are of form (tag, tag, tag, word) """
+		""" Conditions are of form (tag, ..., tag, word) """
 		self.freqDistTaggedWords = ConditionalFreqDist()
 		for sent in self.tagged_sents:
 			history = []
@@ -36,9 +37,22 @@ class HMMTagger(object):
 	def construct_freqDistTaggedWords(self):
 		self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
 
+	def addStartAndEndMarkers(self):
+		for sent in self.tagged_sents:
+			sent[0] = ("S", "S")
+			sent += [("E", "E")]
+
 	def train(self):
+		self.addStartAndEndMarkers()
 		self.construct_frequencies()
-		
+		self.viterbi()
+
+	def viterbi(self):
+		storage = []
+		back = []
+		# TODO
+
+
 
 	def tag(self):
 		pass
