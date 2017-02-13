@@ -25,8 +25,7 @@ class HMMTagger(object):
 					del history[0]
 
 	def construct_freqDist(self):
-		self.freqDistTaggedWords = ConditionalFreqDist([])
-
+		self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagges_sents for j in i])
 
 	def train(self):
 		#extract tags from sentences
