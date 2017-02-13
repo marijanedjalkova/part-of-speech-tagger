@@ -29,7 +29,5 @@ def compare(detected_tags_lst, original_tags_lst):
     return (res*100.0)/(total*1.0)
 
 
-    #return (sum([1 if x == y else 0 for x, y in zip(detected, original) for detected in detected_tags_lst for original in original_tags_lst]), len(original_tags_lst))
-
 if __name__ == '__main__':
     main()
