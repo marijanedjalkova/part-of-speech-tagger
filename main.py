@@ -1,5 +1,6 @@
 from nltk.corpus import brown
 from HMMTagger import HMMTagger
+from NGRamTagger import NGRamTagger
 from nltk.tokenize import word_tokenize
 
 def show_sent(sent):
