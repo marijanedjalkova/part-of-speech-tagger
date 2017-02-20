@@ -98,10 +98,6 @@ class HMMTagger(object):
 			best_seq.append(p[current_best_tag])
 			current_best_tag = p[current_best_tag]
 		best_seq.reverse()
-
-		for t in best_seq:
-			print t
-		print( "The probability of the best tag sequence is:", prob_seq)
 		return best_seq
 
 	def get_prev_tag(self, tag, prev, curr_word=None):
@@ -119,7 +115,8 @@ class HMMTagger(object):
 			best_prev = prev.keys()[0]
 		return best_prev
 
-	def tag(self, test_tokens):
+	def tag(self, test_sents):
+		test_tokens = [j for i in test_sents for j in i]
 		return self.viterbi(test_tokens)
 
 if __name__ == '__main__':
