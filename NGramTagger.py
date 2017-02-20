@@ -1,6 +1,6 @@
 from nltk import ConditionalFreqDist
 
-class NGRamTagger(object):
+class NGramTagger(object):
     """ N-Gram Part-of-Speech tagger """
 
     def __init__(self, n=0):
