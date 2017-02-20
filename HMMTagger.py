@@ -1,6 +1,8 @@
-from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams
+from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
 
 class HMMTagger(object):
+	START_TAG = "<s>"
+	END_TAG = "</s>"
 
 	def __init__(self, tagged_sents, n=0):
 		self.n = n
@@ -12,8 +14,14 @@ class HMMTagger(object):
 		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
 		#extract tags from sentences
 		tags = []
-		for sent in self.tagged_sents:
-			tags.extend([t for (_,t) in sent])
+		# V1 - for list of sentences
+		#for sent in self.tagged_sents:
+		#	tags.extend([t for (_,t) in sent])
+		
+		# V2 - for list of words
+		for (word, tag) in self.tagged_sents:
+			tags += tag
+
 		self.tagset = set(tags)
 		# now tags is a list of tags
 		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
@@ -35,12 +43,19 @@ class HMMTagger(object):
 					del history[0]
 
 	def construct_freqDistTaggedWords(self):
-		self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
+		#""" for tagged_sents that are a list of lists """
+		#self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
+		# for tagged_sents that are already joined
+		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
 
 	def addStartAndEndMarkers(self):
+		""" returns a flat list of tokens """
+		res = []
 		for sent in self.tagged_sents:
-			sent[0] = ("S", "S")
-			sent += [("E", "E")]
+			res += [(START_TAG, START_TAG)]
+			res += sent
+			res += [(END_TAG, END_TAG)]
+		self.tagged_sents = res
 
 	def train(self):
 		self.addStartAndEndMarkers()
