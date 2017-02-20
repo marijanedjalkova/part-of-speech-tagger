@@ -64,8 +64,8 @@ class HMMTagger(object):
 
 
 	def viterbi(self, words_to_tag):
-		res = [] # a 2D matrix denoting probability of best path to get to state q after scanning input up to pos i
-		back = [] # a 2D matrix
+		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
+		back = [] # a list of dicts
 		start_viterbi = {}
 		start_back = {}
 		for tag in self.tagset:
@@ -74,8 +74,50 @@ class HMMTagger(object):
 				start_back[tag] = START_TAG
 		res.append(start_viterbi)
 		back.append(start_back)
-		print start_viterbi
-		print start_back
+
+		for wordindex in range(1, len(words_to_tag)):
+			current_viterbi = {}
+			current_back = {}
+			prev = res[-1]
+			for tag in self.tagset:
+				if tag != START_TAG:
+					best_prev_tag = self.get_prev_tag(tag, prev, words_to_tag[wordindex])
+					current_viterbi[tag] = prev[best_prev_tag] * self.probDistTags[best_prev_tag].prob(tag) * self.probDistTaggedWords[words_to_tag[wordindex]].prob( tag )
+					current_back[tag] = best_prev_tag
+
+			res.append(current_viterbi)
+			back.append(current_back)
+
+		prev = res[-1]
+		best_prev_tag = self.get_prev_tag(END_TAG, prev)
+		prob_seq = prev[ best_prev_tag ] * self.probDistTags[ best_prev_tag].prob(END_TAG)
+		best_seq = [ END_TAG, best_prev_tag ]
+		back.reverse()
+		current_best_tag = best_prev_tag
+		for p in back:
+			best_seq.append(p[current_best_tag])
+			current_best_tag = p[current_best_tag]
+		best_seq.reverse()
+
+		for t in best_seq:
+			print t
+		print( "The probability of the best tag sequence is:", prob_seq)
+		return best_seq
+
+	def get_prev_tag(self, tag, prev, curr_word=None):
+		best_prev = None
+		best_prob = 0.0
+		for prevtag in prev.keys():
+			if not curr_word:
+				prob = prev[ prevtag ] * self.probDistTags[prevtag].prob(tag)
+			else:
+				prob = prev[ prevtag ] * self.probDistTags[prevtag].prob(tag) * self.probDistTaggedWords[curr_word].prob(tag)
+			if prob > best_prob:
+				best_prob = prob
+				best_prev = prevtag
+		if best_prev == None:
+			best_prev = prev.keys()[0]
+		return best_prev
 
 	def tag(self, test_tokens):
 		return self.viterbi(test_tokens)
@@ -84,7 +126,5 @@ if __name__ == '__main__':
 	from nltk.corpus import brown
 	from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist
 	sents = brown.tagged_sents()
-	hmt = HMMTagger(sents[:10])
-	print hmt.probDistTaggedWords.conditions()[:4]
-	print hmt.probDistTaggedWords["irregularities"].prob("NNS")
+	hmt = HMMTagger(sents[:20000])
 	hmt.tag(["The", "Fulton", "county"])
