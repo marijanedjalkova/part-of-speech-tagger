@@ -22,8 +22,7 @@ class HMMTagger(object):
 
 		# V2 - for list of words
 		for (word, tag) in self.tagged_sents:
-			tags += tag
-
+			tags += [tag]
 		self.tagset = set(tags)
 		# now tags is a list of tags
 		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
@@ -62,21 +61,30 @@ class HMMTagger(object):
 	def train(self):
 		self.addStartAndEndMarkers()
 		self.construct_frequencies()
-		self.viterbi()
 
-	def viterbi(self):
-		res = [] # a 2D table denoting probability of best path to get to state q after scanning input up to pos i
-		storage = []
-		back = []
-		# TODO
 
-	def tag(self):
-		pass
+	def viterbi(self, words_to_tag):
+		res = [] # a 2D matrix denoting probability of best path to get to state q after scanning input up to pos i
+		back = [] # a 2D matrix
+		start_viterbi = {}
+		start_back = {}
+		for tag in self.tagset:
+			if tag != START_TAG:
+				start_viterbi[tag] = self.probDistTags[START_TAG].prob(tag) * self.probDistTaggedWords[words_to_tag[0]].prob( tag )
+				start_back[tag] = START_TAG
+		res.append(start_viterbi)
+		back.append(start_back)
+		print start_viterbi
+		print start_back
+
+	def tag(self, test_tokens):
+		return self.viterbi(test_tokens)
 
 if __name__ == '__main__':
 	from nltk.corpus import brown
 	from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist
 	sents = brown.tagged_sents()
-	hmt = HMMTagger(sents[:2])
+	hmt = HMMTagger(sents[:10])
 	print hmt.probDistTaggedWords.conditions()[:4]
 	print hmt.probDistTaggedWords["irregularities"].prob("NNS")
+	hmt.tag(["The", "Fulton", "county"])
