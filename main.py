@@ -4,7 +4,7 @@ from NGramTagger import NGramTagger
 from nltk.tokenize import word_tokenize
 
 def main():
-    test()
+    sents_to_plain()
     return
     sents = brown.tagged_sents()
     # 57340 sentences
@@ -18,8 +18,7 @@ def main():
     new_tags = t.tag(test_words)
     print compare(new_tags, test_tags), "%"
 
-def plain_to_sents():
-    tags = ['<s>', u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC', '</s>','<s>', u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC', '</s>']
+def plain_to_sents(tags):
     res = []
     small = []
     for t in tags:
@@ -30,8 +29,16 @@ def plain_to_sents():
             small = []
             continue
         small.append(t)
-    print res
+    return res
 
+def sents_to_plain():
+    sents = [[u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC'], [u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC', u'BEDZ-NC']]
+    res = []
+    for s in sents:
+        res.append("<s>")
+        res.extend(s)
+        res.append("</s>")
+    return res
 
 
 def compare(detected_tags_lst, original_tags_lst):
