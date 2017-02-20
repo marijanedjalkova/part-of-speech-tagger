@@ -119,6 +119,13 @@ class HMMTagger(object):
 		test_tokens = [j for i in test_sents for j in i]
 		return self.viterbi(test_tokens)
 
+	def tag_sents(self, test_sents):
+		res = []
+		for sent in test_sents:
+			print " sent is ", sent
+			res.append(self.viterbi(sent)[1:-1]) # remove start and end tags
+		return res
+
 
 if __name__ == '__main__':
 	from nltk.corpus import brown
