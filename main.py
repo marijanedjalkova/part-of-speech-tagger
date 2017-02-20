@@ -11,7 +11,7 @@ def main():
     # 57340 sentences
     training_set = sents[:50000]
     testing_set = sents[50000:50002]
-    t = HMMTagger(3)
+    t = HMMTagger(training_set, 3)
     #t.train(training_set)
     test_words = [[w for (w,_) in sentence] for sentence in testing_set]
     test_tags = [[tag for (_,tag) in sentence] for sentence in testing_set]
