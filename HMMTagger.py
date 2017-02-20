@@ -119,6 +119,7 @@ class HMMTagger(object):
 		test_tokens = [j for i in test_sents for j in i]
 		return self.viterbi(test_tokens)
 
+
 if __name__ == '__main__':
 	from nltk.corpus import brown
 	from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist
