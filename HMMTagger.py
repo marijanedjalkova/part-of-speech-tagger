@@ -1,7 +1,9 @@
 from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
 
 class HMMTagger(object):
+	global START_TAG
 	START_TAG = "<s>"
+	global END_TAG
 	END_TAG = "</s>"
 
 	def __init__(self, tagged_sents, n=0):
@@ -17,7 +19,7 @@ class HMMTagger(object):
 		# V1 - for list of sentences
 		#for sent in self.tagged_sents:
 		#	tags.extend([t for (_,t) in sent])
-		
+
 		# V2 - for list of words
 		for (word, tag) in self.tagged_sents:
 			tags += tag
@@ -63,11 +65,10 @@ class HMMTagger(object):
 		self.viterbi()
 
 	def viterbi(self):
+		res = [] # a 2D table denoting probability of best path to get to state q after scanning input up to pos i
 		storage = []
 		back = []
 		# TODO
-
-
 
 	def tag(self):
 		pass
@@ -76,6 +77,6 @@ if __name__ == '__main__':
 	from nltk.corpus import brown
 	from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist
 	sents = brown.tagged_sents()
-	print sents
 	hmt = HMMTagger(sents[:2])
-	#print hmt.probDist[("irregularities",)].prob("NNS")
+	print hmt.probDistTaggedWords.conditions()[:4]
+	print hmt.probDistTaggedWords["irregularities"].prob("NNS")
