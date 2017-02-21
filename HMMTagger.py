@@ -13,21 +13,18 @@ class HMMTagger(object):
 		self.train()
 
 	def construct_frequencies(self):
-		self.construct_freqDistTaggedWords()
+		#self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
+		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
+		print self.freqDistTaggedWords["looking"].max()
+
 		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
 		# now tags is a list of tags
-		self.freqDistTags = ConditionalFreqDist(ngrams(tags, self.n))
+		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
 		# TODO change from bigrams to ngrams
 		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
-
-	def construct_freqDistTaggedWords(self):
-		#""" for tagged_sents that are a list of lists """
-		#self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
-		# for tagged_sents that are already joined
-		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
 
 	def addStartAndEndMarkers(self):
 		""" returns a flat list of tokens """
@@ -102,7 +99,7 @@ class HMMTagger(object):
 	def tag_sents(self, test_sents):
 		res = []
 		for sent in test_sents:
-			print " sent is ", sent
+			#print " sent is ", sent
 			res.append(self.viterbi(sent)[1:-1]) # remove start and end tags
 		return res
 
