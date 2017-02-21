@@ -8,36 +8,31 @@ class HMMTagger(object):
 	global UNK
 	UNK = "UNK"
 
-	def __init__(self, tagged_sents, n=2):
+	def __init__(self, training_sents, n=2):
 		self.n = n
-		self.tagged_sents = tagged_sents
+		self.tagged_sents = self.addStartAndEndMarkers(training_sents)
 		self.train()
 
-	def construct_frequencies(self):
+	def train(self):
 		""" Construct the conditional frequencies and probabilities """
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
 
-		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents]) #TODO can't change to ngrams right?
+		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 
-	def addStartAndEndMarkers(self):
+	def addStartAndEndMarkers(self, training_sents):
 		""" returns a flat list of tokens """
 		res = []
-		for sent in self.tagged_sents:
+		for sent in training_sents:
 			res += [(START_TAG, START_TAG)]
 			res += sent
 			res += [(END_TAG, END_TAG)]
-		self.tagged_sents = res
-
-	def train(self):
-		""" Train the model using the training set """
-		self.addStartAndEndMarkers()
-		self.construct_frequencies()
+		return res
 
 	def get_start_q(self, word):
 		""" The first column of viterbi algorithm """
