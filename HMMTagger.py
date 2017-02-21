@@ -29,20 +29,6 @@ class HMMTagger(object):
 		# TODO change from bigrams to ngrams
 		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
 
-	def construct_ngram_freqDist(self):
-		""" Conditions are of form (tag, ..., tag, word) """
-		self.freqDistTaggedWords = ConditionalFreqDist()
-		for sent in self.tagged_sents:
-			history = []
-			for token in sent:
-				word = token[0]
-				tag = token[1]
-				context = tuple(history + [word])
-				self.freqDistTaggedWords[context][tag] += 1
-				history.append(tag)
-				if len(history) == (self.n+1):
-					del history[0]
-
 	def construct_freqDistTaggedWords(self):
 		#""" for tagged_sents that are a list of lists """
 		#self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
