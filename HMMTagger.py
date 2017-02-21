@@ -7,7 +7,7 @@ class HMMTagger(object):
 	global END_TAG
 	END_TAG = "</s>"
 
-	def __init__(self, tagged_sents, n=2):
+	def __init__(self, tagged_sents, n=4):
 		self.n = n
 		self.tagged_sents = tagged_sents
 		self.train()
@@ -16,14 +16,7 @@ class HMMTagger(object):
 		self.construct_freqDistTaggedWords()
 		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
 		#extract tags from sentences
-		tags = []
-		# V1 - for list of sentences
-		#for sent in self.tagged_sents:
-		#	tags.extend([t for (_,t) in sent])
-
-		# V2 - for list of words
-		for (word, tag) in self.tagged_sents:
-			tags += [tag]
+		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
 		# now tags is a list of tags
 		self.freqDistTags = ConditionalFreqDist(ngrams(tags, self.n))
