@@ -13,17 +13,14 @@ class HMMTagger(object):
 		self.train()
 
 	def construct_frequencies(self):
-		#self.freqDistTaggedWords = ConditionalFreqDist([j for i in self.tagged_sents for j in i])
-		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
-		print self.freqDistTaggedWords["looking"].max()
-
-		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
-		# now tags is a list of tags
+
+		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
+		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
+
 		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
-		# TODO change from bigrams to ngrams
 		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
 
 	def addStartAndEndMarkers(self):
@@ -102,11 +99,3 @@ class HMMTagger(object):
 			#print " sent is ", sent
 			res.append(self.viterbi(sent)[1:-1]) # remove start and end tags
 		return res
-
-
-if __name__ == '__main__':
-	from nltk.corpus import brown
-	from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist
-	sents = brown.tagged_sents()
-	hmt = HMMTagger(sents[:20000])
-	hmt.tag(["The", "Fulton", "county"])
