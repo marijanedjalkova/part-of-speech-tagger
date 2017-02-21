@@ -75,11 +75,14 @@ class HMMTagger(object):
 			back.append(current_back)
 
 		prev = res[-1]
-		best_prev_tag = self.get_prev_tag(END_TAG, prev)
-		prob_seq = prev[ best_prev_tag ] * self.probDistTags[ best_prev_tag].prob(END_TAG)
-		best_seq = [ END_TAG, best_prev_tag ]
 		back.reverse()
-		current_best_tag = best_prev_tag
+		return self.construct_solution(back, prev)
+
+
+	def construct_solution(self, back, prev):
+		""" Constructs solution by following the back pointers on a ready viterbi table """
+		current_best_tag = self.get_prev_tag(END_TAG, prev)
+		best_seq = [ END_TAG, current_best_tag ]
 		for p in back:
 			best_seq.append(p[current_best_tag])
 			current_best_tag = p[current_best_tag]
