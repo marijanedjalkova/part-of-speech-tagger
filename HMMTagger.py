@@ -1,4 +1,5 @@
 from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
+#from nltk.util import ngrams
 
 class HMMTagger(object):
 	global START_TAG
@@ -6,7 +7,7 @@ class HMMTagger(object):
 	global END_TAG
 	END_TAG = "</s>"
 
-	def __init__(self, tagged_sents, n=0):
+	def __init__(self, tagged_sents, n=2):
 		self.n = n
 		self.tagged_sents = tagged_sents
 		self.train()
@@ -25,7 +26,7 @@ class HMMTagger(object):
 			tags += [tag]
 		self.tagset = set(tags)
 		# now tags is a list of tags
-		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
+		self.freqDistTags = ConditionalFreqDist(ngrams(tags, self.n))
 		# TODO change from bigrams to ngrams
 		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
 
