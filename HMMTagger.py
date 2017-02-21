@@ -59,24 +59,38 @@ class HMMTagger(object):
 				current_back[tag] = best_prev_tag
 		return (current_viterbi, current_back)
 
+	def viterbi_col(self, word, prev=None):
+		""" General algorithm for a viterbi table column """
+		vit = {}
+		back = {}
+		for tag in self.tagset:
+			if tag != START_TAG:
+				if prev:
+					best_prev_tag = self.get_prev_tag(tag, prev, word)
+					vit[tag] = prev[best_prev_tag] * self.probDistTags[best_prev_tag].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+					back[tag] = best_prev_tag
+				else:
+					vit[tag] = self.probDistTags[START_TAG].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+					back[tag] = START_TAG
+		return (vit, back)
+
 
 	def viterbi(self, words_to_tag):
 		""" Viterbi algorithm """
 		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
-		back = [] # a list of dicts
+		backpointers = [] # a list of dicts
 
-		start_viterbi, start_back = self.get_start_q(words_to_tag[0])
-		res.append(start_viterbi)
-		back.append(start_back)
-
-		for wordindex in range(1, len(words_to_tag)):
-			current_viterbi, current_back = self.get_word_viterbi(words_to_tag[wordindex], res[-1])
-			res.append(current_viterbi)
-			back.append(current_back)
+		for wordindex in range(0, len(words_to_tag)):
+			if wordindex == 0:
+				vit, back = self.viterbi_col(words_to_tag[wordindex])
+			else:
+				vit, back = self.viterbi_col(words_to_tag[wordindex], res[-1])
+			res.append(vit)
+			backpointers.append(back)
 
 		prev = res[-1]
-		back.reverse()
-		return self.construct_solution(back, prev)
+		backpointers.reverse()
+		return self.construct_solution(backpointers, prev)
 
 
 	def construct_solution(self, back, prev):
