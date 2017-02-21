@@ -1,13 +1,14 @@
 from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
-#from nltk.util import ngrams
 
 class HMMTagger(object):
 	global START_TAG
 	START_TAG = "<s>"
 	global END_TAG
 	END_TAG = "</s>"
+	global UNK
+	UNK = "UNK"
 
-	def __init__(self, tagged_sents, n=4):
+	def __init__(self, tagged_sents, n=2):
 		self.n = n
 		self.tagged_sents = tagged_sents
 		self.train()
@@ -18,11 +19,11 @@ class HMMTagger(object):
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
 
-		self.freqDistTaggedWords = ConditionalFreqDist(self.tagged_sents)
-		self.probDistTaggedWords = ConditionalProbDist(self.freqDistTaggedWords, MLEProbDist)
+		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents]) #TODO can't change to ngrams right?
+		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
-		self.freqDistTags = ConditionalFreqDist(bigrams(tags))
-		self.probDistTags = ConditionalProbDist(self.freqDistTags, MLEProbDist)
+		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
+		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 
 	def addStartAndEndMarkers(self):
 		""" returns a flat list of tokens """
@@ -46,7 +47,7 @@ class HMMTagger(object):
 		start_back = {}
 		for tag in self.tagset:
 			if tag != START_TAG:
-				start_viterbi[tag] = self.probDistTags[START_TAG].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+				start_viterbi[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 				start_back[tag] = START_TAG
 		return (start_viterbi, start_back)
 
@@ -59,7 +60,7 @@ class HMMTagger(object):
 		for tag in self.tagset:
 			if tag != START_TAG:
 				best_prev_tag = self.get_prev_tag(tag, prev, word)
-				current_viterbi[tag] = prev[best_prev_tag] * self.probDistTags[best_prev_tag].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+				current_viterbi[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 				current_back[tag] = best_prev_tag
 		return (current_viterbi, current_back)
 
@@ -71,10 +72,10 @@ class HMMTagger(object):
 			if tag != START_TAG:
 				if prev:
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
-					vit[tag] = prev[best_prev_tag] * self.probDistTags[best_prev_tag].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = best_prev_tag
 				else:
-					vit[tag] = self.probDistTags[START_TAG].prob(tag) * self.probDistTaggedWords[word].prob( tag )
+					vit[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
 		return (vit, back)
 
@@ -115,9 +116,9 @@ class HMMTagger(object):
 		best_prob = 0.0
 		for prevtag in prev.keys():
 			# find the maximum probability
-			prob = prev[ prevtag ] * self.probDistTags[prevtag].prob(tag)
+			prob = prev[ prevtag ] * self.transition_probabilities[prevtag].prob(tag)
 			if  curr_word:
-				prob *= self.probDistTaggedWords[curr_word].prob(tag)
+				prob *= self.emission_probabilities[ tag ].prob( curr_word )
 			if prob > best_prob:
 				best_prob = prob
 				best_prev = prevtag
