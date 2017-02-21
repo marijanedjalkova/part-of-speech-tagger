@@ -40,6 +40,8 @@ class HMMTagger(object):
 
 	def get_start_q(self, word):
 		""" The first column of viterbi algorithm """
+		# TODO this is not currently used, so can be removed.
+		# Generalisartion of this is in viterbi_col()
 		start_viterbi = {}
 		start_back = {}
 		for tag in self.tagset:
@@ -50,6 +52,8 @@ class HMMTagger(object):
 
 	def get_word_viterbi(self, word, prev):
 		""" nth column for the viterbi table where n!=0 """
+		# TODO this is not currently used, so can be removed.
+		# Generalisartion of this is in viterbi_col()
 		current_viterbi = {}
 		current_back = {}
 		for tag in self.tagset:
@@ -80,7 +84,7 @@ class HMMTagger(object):
 		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
 		backpointers = [] # a list of dicts
 
-		for wordindex in range(0, len(words_to_tag)):
+		for wordindex in range(len(words_to_tag)):
 			if wordindex == 0:
 				vit, back = self.viterbi_col(words_to_tag[wordindex])
 			else:
