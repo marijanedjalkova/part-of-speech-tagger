@@ -20,10 +20,30 @@ class HMMTagger(object):
 		self.tagset = set(tags)
 
 		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
+		self.find_single_freq(self.emission_frequencies)
+		# emission - probability that a certain tag is a certain word
+		# e.g. probabi that a VB is 'race'
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
+
+	def find_single_freq(self, conditionalDist):
+		""" finds words that are only seen once in the training set"""
+		conds = conditionalDist.conditions()
+		res = {}
+		for tag in conds:
+			freqdist = conditionalDist[tag]
+			for w in list(freqdist.keys()):
+				if freqdist[w]==1:
+					print "just one ", w, " in ", tag
+					if w not in res:
+						res[w]=tag
+					else:
+						del res[w]
+		return res
+
+
 
 	def addStartAndEndMarkers(self, training_sents):
 		""" returns a flat list of tokens """
