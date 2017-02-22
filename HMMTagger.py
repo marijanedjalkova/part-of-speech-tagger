@@ -1,4 +1,4 @@
-from nltk import ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
+from nltk import FreqDist, ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
 
 class HMMTagger(object):
 	global START_TAG
@@ -19,30 +19,21 @@ class HMMTagger(object):
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
 
+		self.replaceUnique()
 		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
-		self.find_single_freq(self.emission_frequencies)
 		# emission - probability that a certain tag is a certain word
-		# e.g. probabi that a VB is 'race'
+		# e.g. probability that a VB is 'race'
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 
-	def find_single_freq(self, conditionalDist):
-		""" finds words that are only seen once in the training set"""
-		conds = conditionalDist.conditions()
-		res = {}
-		for tag in conds:
-			freqdist = conditionalDist[tag]
-			for w in list(freqdist.keys()):
-				if freqdist[w]==1:
-					print "just one ", w, " in ", tag
-					if w not in res:
-						res[w]=tag
-					else:
-						del res[w]
-		return res
-
+	def replaceUnique(self):
+		""" Replaces unique words with the UNK label """
+		word_frequencies = FreqDist([word for (word, _) in self.tagged_sents])
+		hap = word_frequencies.hapaxes()
+		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
+		self.tagged_sents = res
 
 
 	def addStartAndEndMarkers(self, training_sents):
