@@ -1,4 +1,5 @@
 from nltk import FreqDist, ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
+import time
 
 class HMMTagger(object):
 	global START_TAG
@@ -27,13 +28,22 @@ class HMMTagger(object):
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
+		print "Model trained."
+
+	def process_input(self):
+		# get tags
+		pass
+
 
 	def replaceUnique(self):
 		""" Replaces unique words with the UNK label """
+		start = time.time()
 		word_frequencies = FreqDist([word for (word, _) in self.tagged_sents])
-		hap = word_frequencies.hapaxes()
+		hap = set(word_frequencies.hapaxes())
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
+
+
 
 
 	def addStartAndEndMarkers(self, training_sents):
