@@ -30,11 +30,6 @@ class HMMTagger(object):
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 		print "Model trained."
 
-	def process_input(self):
-		# get tags
-		pass
-
-
 	def replaceUnique(self):
 		""" Replaces unique words with the UNK label """
 		start = time.time()
@@ -42,9 +37,6 @@ class HMMTagger(object):
 		hap = set(word_frequencies.hapaxes())
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
-
-
-
 
 	def addStartAndEndMarkers(self, training_sents):
 		""" returns a flat list of tokens """
