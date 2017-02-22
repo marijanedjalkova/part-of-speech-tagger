@@ -77,19 +77,35 @@ class HMMTagger(object):
 		return (current_viterbi, current_back)
 
 	def viterbi_col(self, word, prev=None):
-		""" General algorithm for a viterbi table column """
+		""" General algorithm for a viterbi table column.
+		This is only called once for every word. """
 		vit = {}
 		back = {}
+		if word==UNK:
+			raise Exception # never!
+
 		for tag in self.tagset:
 			if tag != START_TAG:
 				if prev:
-
+					if word=="un-American" and tag=="IN":
+						print prev
+						 # gets here fine, with correct data
+					# TODO maybe check here that the word is not new. If it is, replace it with UNK
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
 
 					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					if best_prev_tag!="BE" or vit[tag]>0.0:
-						print "nonzero for ", tag
+						print "probably ", tag
+
 					back[tag] = best_prev_tag
+					if word=="un-American" and tag=="IN":
+						print best_prev_tag
+						print prev[best_prev_tag]
+						print self.transition_probabilities[best_prev_tag].prob(tag)
+						print self.emission_probabilities[ tag ].prob( word ) # BUG this is wrong! They see the word for the first time, and they work with the progonal word not UNK
+						print vit[tag]
+						print "pause"
+						raise Exception
 				else:
 					vit[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
@@ -109,6 +125,10 @@ class HMMTagger(object):
 				vit, back = self.viterbi_col(words_to_tag[wordindex])
 			else:
 				vit, back = self.viterbi_col(words_to_tag[wordindex], res[-1])
+				if words_to_tag[wordindex]=="un-American":
+					print vit
+					# BUG all zeros
+					raise Exception
 
 			res.append(vit)
 			backpointers.append(back)
@@ -132,26 +152,33 @@ class HMMTagger(object):
 
 	def get_prev_tag(self, tag, prev, curr_word=None):
 		""" Finds a previous tag A for the current tag B s.t. the probability of AB was the highest
-		for the current word. """
+		for the current word.
+		Called for every word and every tag """
 		# TODO higher order
 		best_prev = None
 		best_prob = 0.0
-
+		if curr_word==UNK:
+			print "getting prev tag for UNK as ", tag  # gets here
 		for prevtag in prev.keys():
 			# find the maximum probability
 			prt = prev[ prevtag ]
 			tr_prob = self.transition_probabilities[prevtag].prob(tag)
 			prob = prt * tr_prob
+
 			if  curr_word:
 				pr = self.emission_probabilities[ tag ].prob( curr_word )
 				prob *= pr
+			if curr_word==UNK and prob>0.0:
+				print prt, tr_prob, prob
+				print tag
 
 			if prob > best_prob:
+				if curr_word==UNK and prob>0.0:
+					print "updating"
 				best_prob = prob
 				best_prev = prevtag
 
 		if best_prev == None:
-
 			if curr_word:
 				test = self.check_word(curr_word)
 				if (test):
@@ -167,6 +194,9 @@ class HMMTagger(object):
 			probability = self.emission_probabilities[tag]
 			if probability.prob(word) > 0:
 				return False
+		if word==UNK:
+			print "UNK cannot possibly be an unseen word!"
+			raise Exception
 		return True
 
 	def tag_sents(self, test_sents):
