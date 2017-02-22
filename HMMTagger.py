@@ -19,8 +19,6 @@ class HMMTagger(object):
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
-		self.tagset.add(START_TAG) # TODO not sure this is needed
-		self.tagset.add(END_TAG)
 
 		self.replaceUnique()
 
@@ -85,30 +83,37 @@ class HMMTagger(object):
 		for tag in self.tagset:
 			if tag != START_TAG:
 				if prev:
+
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
+
 					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
+					if best_prev_tag!="BE" or vit[tag]>0.0:
+						print "nonzero for ", tag
 					back[tag] = best_prev_tag
 				else:
 					vit[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
+
 		return (vit, back)
 
 
 	def viterbi(self, words_to_tag):
 		""" Viterbi algorithm """
+		print "tagging ", words_to_tag
 		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
 		backpointers = [] # a list of dicts
 
 		for wordindex in range(len(words_to_tag)):
+			print "col for ", words_to_tag[wordindex]
 			if wordindex == 0:
 				vit, back = self.viterbi_col(words_to_tag[wordindex])
 			else:
 				vit, back = self.viterbi_col(words_to_tag[wordindex], res[-1])
+
 			res.append(vit)
 			backpointers.append(back)
 
 		prev = res[-1]
-
 		backpointers.reverse()
 		return self.construct_solution(backpointers, prev)
 
@@ -116,6 +121,7 @@ class HMMTagger(object):
 	def construct_solution(self, back, prev):
 		""" Constructs solution by following the back pointers on a ready viterbi table """
 		current_best_tag = self.get_prev_tag(END_TAG, prev)
+
 		best_seq = [ END_TAG, current_best_tag ]
 		for p in back:
 			to_append = p[current_best_tag]
@@ -130,57 +136,42 @@ class HMMTagger(object):
 		# TODO higher order
 		best_prev = None
 		best_prob = 0.0
+
 		for prevtag in prev.keys():
 			# find the maximum probability
 			prt = prev[ prevtag ]
 			tr_prob = self.transition_probabilities[prevtag].prob(tag)
-			#if tr_prob>0.0:
-				#print "probability that ", tag, " follows ", prevtag, " = ", tr_prob
 			prob = prt * tr_prob
 			if  curr_word:
 				pr = self.emission_probabilities[ tag ].prob( curr_word )
 				prob *= pr
-			if prob>0.0:
-				print "OLOLO", prob, best_prob, curr_word
-				print prob > best_prob
-				print "-------------"
+
 			if prob > best_prob:
-				print "changing, ", curr_word, "cur tag is ", best_prev
 				best_prob = prob
 				best_prev = prevtag
-				print "new best_prob ", best_prob
-				print "new best prev ", best_prev
+
 		if best_prev == None:
-			# assign at least something to avoid None exception
+
 			if curr_word:
 				test = self.check_word(curr_word)
 				if (test):
 					return self.get_prev_tag(tag, prev, UNK)
-
-			print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-			print curr_word, tag
+			# assign at least something to avoid None exception
 			best_prev = prev.keys()[0]
 		return best_prev
 
 	def check_word(self, word):
+		""" check if the word is actually seen for the first time """
 		tags = self.emission_probabilities.conditions()
 		for tag in tags:
 			probability = self.emission_probabilities[tag]
 			if probability.prob(word) > 0:
-				print "not a unique word!", word
 				return False
-		print "haven't seen this word before ", word
 		return True
-
-
-	def tag(self, test_sents):
-		""" Tag the input by combining it first into a list of tokens """
-		test_tokens = [j for i in test_sents for j in i]
-		return self.viterbi(test_tokens)
 
 	def tag_sents(self, test_sents):
 		"""Tag the given text sentence by sentence"""
 		res = []
 		for sent in test_sents:
-			res.append(self.viterbi(sent)[1:-1]) # remove start and end tags
+			res.append(self.viterbi(sent)[1:-1])# remove start and end tags
 		return res
