@@ -19,15 +19,20 @@ class HMMTagger(object):
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
 		self.tagset = set(tags)
+		self.tagset.add(START_TAG) # TODO not sure this is needed
+		self.tagset.add(END_TAG)
 
 		self.replaceUnique()
+
 		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
+
 		# emission - probability that a certain tag is a certain word
 		# e.g. probability that a VB is 'race'
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
+
 		print "Model trained."
 
 	def replaceUnique(self):
@@ -37,6 +42,7 @@ class HMMTagger(object):
 		hap = set(word_frequencies.hapaxes())
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
+		counter = 0
 
 	def addStartAndEndMarkers(self, training_sents):
 		""" returns a flat list of tokens """
@@ -102,6 +108,7 @@ class HMMTagger(object):
 			backpointers.append(back)
 
 		prev = res[-1]
+
 		backpointers.reverse()
 		return self.construct_solution(backpointers, prev)
 
@@ -111,7 +118,8 @@ class HMMTagger(object):
 		current_best_tag = self.get_prev_tag(END_TAG, prev)
 		best_seq = [ END_TAG, current_best_tag ]
 		for p in back:
-			best_seq.append(p[current_best_tag])
+			to_append = p[current_best_tag]
+			best_seq.append(to_append)
 			current_best_tag = p[current_best_tag]
 		best_seq.reverse()
 		return best_seq
@@ -124,16 +132,46 @@ class HMMTagger(object):
 		best_prob = 0.0
 		for prevtag in prev.keys():
 			# find the maximum probability
-			prob = prev[ prevtag ] * self.transition_probabilities[prevtag].prob(tag)
+			prt = prev[ prevtag ]
+			tr_prob = self.transition_probabilities[prevtag].prob(tag)
+			#if tr_prob>0.0:
+				#print "probability that ", tag, " follows ", prevtag, " = ", tr_prob
+			prob = prt * tr_prob
 			if  curr_word:
-				prob *= self.emission_probabilities[ tag ].prob( curr_word )
+				pr = self.emission_probabilities[ tag ].prob( curr_word )
+				prob *= pr
+			if prob>0.0:
+				print "OLOLO", prob, best_prob, curr_word
+				print prob > best_prob
+				print "-------------"
 			if prob > best_prob:
+				print "changing, ", curr_word, "cur tag is ", best_prev
 				best_prob = prob
 				best_prev = prevtag
+				print "new best_prob ", best_prob
+				print "new best prev ", best_prev
 		if best_prev == None:
 			# assign at least something to avoid None exception
+			if curr_word:
+				test = self.check_word(curr_word)
+				if (test):
+					return self.get_prev_tag(tag, prev, UNK)
+
+			print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+			print curr_word, tag
 			best_prev = prev.keys()[0]
 		return best_prev
+
+	def check_word(self, word):
+		tags = self.emission_probabilities.conditions()
+		for tag in tags:
+			probability = self.emission_probabilities[tag]
+			if probability.prob(word) > 0:
+				print "not a unique word!", word
+				return False
+		print "haven't seen this word before ", word
+		return True
+
 
 	def tag(self, test_sents):
 		""" Tag the input by combining it first into a list of tokens """
