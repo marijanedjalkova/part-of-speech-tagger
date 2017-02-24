@@ -42,13 +42,14 @@ def process_args(argv, num_of_sents):
 
 def main(argv):
     sents = brown.tagged_sents()
-    num_of_sents = len(sents)
-    # 57340 sentences
-    process_args(argv, num_of_sents)
+    num_of_sents = 57340
+    # I know this is a magic number but Pythoon takes too long to count it every time.
 
+    process_args(argv, num_of_sents)
 
     training_set = sents[trainstart:trainstart+trainlength]
     testing_set = sents[trainstart+trainlength+1:trainstart+trainlength+1+testlength]
+    # the two previous lines take a lot of time
     t = HMMTagger(training_set, smoothing=smoothing)
 
     test_words = [[meow for (meow,_) in sentence] for sentence in testing_set]
@@ -81,8 +82,6 @@ def compare(detected_tags_sents, original_tags_sents):
     total = 0
     original_tags_lst = sents_to_plain(original_tags_sents)
     detected_tags_lst = sents_to_plain(detected_tags_sents)
-    print "detected: ", detected_tags_lst
-    print "original: ", original_tags_lst
     for detected, original in zip(detected_tags_lst, original_tags_lst):
         total +=1
         if detected == original:
