@@ -6,40 +6,49 @@ import sys, getopt
 import numbers
 import time
 
+smoothing = "LAP"
+trainstart = 0
+trainlength = 5000
+testlength = 2
 
-def main(argv):
-    smoothing = "LAP"
-    trainstart = 0
-    trainlength = 5000
-
-    sents = brown.tagged_sents()
-    num_of_sents = len(sents)
-    # 57340 sentences
-
+def process_args(argv, num_of_sents):
+    global smoothing, trainstart, trainlength, testlength
     try:
-        opts, args = getopt.getopt(argv, "s:t:l:",["smoothing=", "trainstart=", "trainlength="])
+        opts, args = getopt.getopt(argv, "s:t:l:e:",["smoothing=", "trainstart=", "trainlength=", "testing="])
     except getopt.GetoptError:
         print 'Could not get arguments'
         sys.exit(2)
     for opt, arg in opts:
-        print arg
         if opt in ('-s', '--smoothing'):
             smoothing = arg
-            continue
-        if opt in ('-t', '--trainstart'):
+        elif opt in ('-t', '--trainstart'):
             if not (arg.isdigit() and (0 <= int(arg) <= (num_of_sents - 1))):
                 print "wrong argument type for ", opt, ", will use default value "
                 continue
             trainstart = int(arg)
-            continue
-        if opt in ('-l', '--trainlength'):
-            if not (arg.isdigit() and (0 <= int(trainstart) + int(arg) <= num_of_sents)):
+        elif opt in ('-l', '--trainlength'):
+            if not (arg.isdigit() and (0 <= int(trainstart) + int(arg) <= num_of_sents - 5)):
                 print "wrong argument type for ", opt, ", will use default value "
                 continue
             trainlength = int(arg)
+        elif opt in ('-e', '--testing'):
+            if not (arg.isdigit() and (0 <= int(trainstart) + int(trainlength) + int(arg) <= num_of_sents)):
+                print "wrong argument type for ", opt, ", will use default value "
+                continue
+            testlength = int(arg)
+        else:
+            continue
 
-    training_set = sents[:50000]
-    testing_set = sents[50001:50003]
+
+def main(argv):
+    sents = brown.tagged_sents()
+    num_of_sents = len(sents)
+    # 57340 sentences
+    process_args(argv, num_of_sents)
+
+
+    training_set = sents[trainstart:trainstart+trainlength]
+    testing_set = sents[trainstart+trainlength+1:trainstart+trainlength+1+testlength]
     t = HMMTagger(training_set, smoothing=smoothing)
 
     test_words = [[meow for (meow,_) in sentence] for sentence in testing_set]
