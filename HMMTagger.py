@@ -1,5 +1,6 @@
 from nltk import FreqDist, ConditionalProbDist, ConditionalFreqDist, MLEProbDist, bigrams, ngrams
 import time
+import re
 
 class HMMTagger(object):
 	global START_TAG
@@ -12,13 +13,14 @@ class HMMTagger(object):
 	def __init__(self, training_sents, n=2, smoothing=None):
 		self.n = n
 		self.smoothing = smoothing
-		self.tagged_sents = self.addStartAndEndMarkers(training_sents) # this takes a lot of time
-		self.train() # this takes a lot of time, a little less than 4 seconds
+		self.tagged_sents = self.addStartAndEndMarkers(training_sents, True) # this takes a lot of time
+		self.train() # this takes almost 4 seconds
 
 
 	def train(self):
 		""" Construct the conditional frequencies and probabilities """
 		#extract tags from sentences
+
 		tags = [tag for (_,tag) in self.tagged_sents]
 
 		self.replaceUnique()
@@ -35,26 +37,30 @@ class HMMTagger(object):
 		self.word_tag_frequencies = ConditionalFreqDist(self.tagged_sents)
 		print "Model trained."
 
-
-
 	def replaceUnique(self):
 		""" Replaces unique words with the UNK label """
-		start = time.time()
 		word_frequencies = FreqDist([word for (word, _) in self.tagged_sents])
 		self.lexicon_size = len(word_frequencies)
 		hap = set(word_frequencies.hapaxes())
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
-		counter = 0
 
-	def addStartAndEndMarkers(self, training_sents):
+	def addStartAndEndMarkers(self, training_sents, merge):
 		""" returns a flat list of tokens """
 		res = []
 		for sent in training_sents:
 			res += [(START_TAG, START_TAG)]
-			res += sent
+			if merge:
+				for (word,tag) in sent:
+					ntag = self.get_merged_tag(tag)
+					res += [(word, ntag)]
+			else:
+				res += sent
 			res += [(END_TAG, END_TAG)]
 		return res
+
+	def get_merged_tag(self, tag):
+		return tag[:2] if tag.startswith("JJ") else tag
 
 	def get_transition_probability(self, prev_tag, tag):
 		prev_tag_count = self.transition_frequencies[prev_tag].N()
