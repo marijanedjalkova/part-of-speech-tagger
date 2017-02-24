@@ -12,15 +12,14 @@ class HMMTagger(object):
 	def __init__(self, training_sents, n=2, smoothing=None):
 		self.n = n
 		self.smoothing = smoothing
-		self.tagged_sents = self.addStartAndEndMarkers(training_sents)
-		self.train()
+		self.tagged_sents = self.addStartAndEndMarkers(training_sents) # this takes a lot of time
+		self.train() # this takes a lot of time, a little less than 4 seconds
 
 
 	def train(self):
 		""" Construct the conditional frequencies and probabilities """
 		#extract tags from sentences
 		tags = [tag for (_,tag) in self.tagged_sents]
-		self.tagset = set(tags)
 
 		self.replaceUnique()
 
@@ -33,7 +32,10 @@ class HMMTagger(object):
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 
+		self.word_tag_frequencies = ConditionalFreqDist(self.tagged_sents)
 		print "Model trained."
+
+
 
 	def replaceUnique(self):
 		""" Replaces unique words with the UNK label """
@@ -68,8 +70,7 @@ class HMMTagger(object):
 		This is only called once for every word. """
 		vit = {}
 		back = {}
-		print "   --- ", word
-		for tag in self.tagset:
+		for tag in self.word_tag_frequencies[word].keys():
 			if tag != START_TAG:
 				if prev:
 
@@ -90,7 +91,6 @@ class HMMTagger(object):
 		""" Viterbi algorithm """
 		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
 		backpointers = [] # a list of dicts
-		print "tagging sentence: ", words_to_tag
 		for wordindex in range(len(words_to_tag)):
 			current_word = words_to_tag[wordindex]
 			if self.is_unknown(current_word):
