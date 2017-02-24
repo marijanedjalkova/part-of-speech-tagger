@@ -57,6 +57,9 @@ def main(argv):
 
     new_tag_sents = t.tag_sents(test_words)
     print compare(new_tag_sents, test_tag_sents), "%"
+    print measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
+    # TODO with merging, accuracy of the merged class grows but the accuracy of the text overall falls?
+    # if merge too much, lose context
 
 def plain_to_sents(tags):
     """ Parses a list of tags where sentences are separated by start and end tags into list of lists"""
@@ -86,6 +89,18 @@ def compare(detected_tags_sents, original_tags_sents):
         total +=1
         if detected == original:
             res+=1
+    return (res*100.0)/(total*1.0)
+
+def measure_accuracy_for_class(detected_tags_sents, original_tags_sents, tag_class):
+    res = 0
+    total = 0
+    original_tags_lst = sents_to_plain(original_tags_sents)
+    detected_tags_lst = sents_to_plain(detected_tags_sents)
+    for detected, original in zip(detected_tags_lst, original_tags_lst):
+        if original==tag_class:
+            total +=1
+            if detected == original:
+                res+=1
     return (res*100.0)/(total*1.0)
 
 
