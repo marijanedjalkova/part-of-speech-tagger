@@ -81,16 +81,11 @@ class HMMTagger(object):
 		This is only called once for every word. """
 		vit = {}
 		back = {}
-		if word==UNK:
-			raise Exception # never!
 
 		for tag in self.tagset:
 			if tag != START_TAG:
 				if prev:
-					if word=="un-American" and tag=="IN":
-						print prev
-						 # gets here fine, with correct data
-					# TODO maybe check here that the word is not new. If it is, replace it with UNK
+
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
 
 					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
@@ -98,14 +93,7 @@ class HMMTagger(object):
 						print "probably ", tag
 
 					back[tag] = best_prev_tag
-					if word=="un-American" and tag=="IN":
-						print best_prev_tag
-						print prev[best_prev_tag]
-						print self.transition_probabilities[best_prev_tag].prob(tag)
-						print self.emission_probabilities[ tag ].prob( word ) # BUG this is wrong! They see the word for the first time, and they work with the progonal word not UNK
-						print vit[tag]
-						print "pause"
-						raise Exception
+
 				else:
 					vit[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
@@ -120,15 +108,15 @@ class HMMTagger(object):
 		backpointers = [] # a list of dicts
 
 		for wordindex in range(len(words_to_tag)):
-			print "col for ", words_to_tag[wordindex]
+			current_word = words_to_tag[wordindex]
+			print "col for ", current_word
+			# TODO mb check here that the word is unknown?
+			if self.is_unknown(current_word):
+				current_word = UNK
 			if wordindex == 0:
-				vit, back = self.viterbi_col(words_to_tag[wordindex])
+				vit, back = self.viterbi_col(current_word)
 			else:
-				vit, back = self.viterbi_col(words_to_tag[wordindex], res[-1])
-				if words_to_tag[wordindex]=="un-American":
-					print vit
-					# BUG all zeros
-					raise Exception
+				vit, back = self.viterbi_col(current_word, res[-1])
 
 			res.append(vit)
 			backpointers.append(back)
@@ -136,6 +124,15 @@ class HMMTagger(object):
 		prev = res[-1]
 		backpointers.reverse()
 		return self.construct_solution(backpointers, prev)
+
+	def is_unknown(self, word):
+		""" Checks if the word is unknown """
+		for tag in set(self.emission_probabilities.conditions()):
+			pr = self.emission_probabilities[tag]
+			if pr.prob( word ) > 0:
+				return False
+		return True
+
 
 
 	def construct_solution(self, back, prev):
@@ -157,8 +154,7 @@ class HMMTagger(object):
 		# TODO higher order
 		best_prev = None
 		best_prob = 0.0
-		if curr_word==UNK:
-			print "getting prev tag for UNK as ", tag  # gets here
+
 		for prevtag in prev.keys():
 			# find the maximum probability
 			prt = prev[ prevtag ]
@@ -168,13 +164,9 @@ class HMMTagger(object):
 			if  curr_word:
 				pr = self.emission_probabilities[ tag ].prob( curr_word )
 				prob *= pr
-			if curr_word==UNK and prob>0.0:
-				print prt, tr_prob, prob
-				print tag
 
 			if prob > best_prob:
-				if curr_word==UNK and prob>0.0:
-					print "updating"
+
 				best_prob = prob
 				best_prev = prevtag
 
