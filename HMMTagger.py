@@ -134,22 +134,9 @@ class HMMTagger(object):
 				best_prev = prevtag
 
 		if best_prev == None:
-			if curr_word:
-				test = self.check_word(curr_word)
-				if (test):
-					return self.get_prev_tag(tag, prev, UNK)
 			# assign at least something to avoid None exception
 			best_prev = prev.keys()[0]
 		return best_prev
-
-	def check_word(self, word):
-		""" check if the word is actually seen for the first time """
-		tags = self.emission_probabilities.conditions()
-		for tag in tags:
-			probability = self.emission_probabilities[tag]
-			if probability.prob(word) > 0:
-				return False
-		return True
 
 	def tag_sents(self, test_sents):
 		"""Tag the given text sentence by sentence"""
