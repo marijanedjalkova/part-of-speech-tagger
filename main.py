@@ -4,6 +4,7 @@ from NGramTagger import NGramTagger
 from nltk.tokenize import word_tokenize
 import sys, getopt
 import numbers
+import time
 
 
 def main(argv):
@@ -12,30 +13,30 @@ def main(argv):
     trainlength = 5000
 
     sents = brown.tagged_sents()
+    num_of_sents = len(sents)
     # 57340 sentences
 
-    if argv:
-        try:
-            opts, args = getopt.getopt(argv)
-        except getopt.GetoptError:
-            print 'Could not get arguments'
-            sys.exit(2)
-        for opt, arg in opts:
-            if opt == 'smoothing':
-                smoothing = arg
+    try:
+        opts, args = getopt.getopt(argv, "s:t:l:",["smoothing=", "trainstart=", "trainlength="])
+    except getopt.GetoptError:
+        print 'Could not get arguments'
+        sys.exit(2)
+    for opt, arg in opts:
+        print arg
+        if opt in ('-s', '--smoothing'):
+            smoothing = arg
+            continue
+        if opt in ('-t', '--trainstart'):
+            if not (arg.isdigit() and (0 <= int(arg) <= (num_of_sents - 1))):
+                print "wrong argument type for ", opt, ", will use default value "
                 continue
-            if opt == 'trainstart':
-                if not (isinstance(arg, numbers.Number) and (0 <= arg <= (len(sents) - 1))):
-                    print "wrong argument type for ", opt, ", will use default value "
-                    continue
-                trainstart = arg
-            if opt == 'trainlength':
-                if not (isinstance(arg, numbers.Number) and (0 <= trainstart + arg <= len(sents))):
-                    print "wrong argument type for ", opt, ", will use default value "
-                    continue
-                trainlength = arg
-
-                
+            trainstart = int(arg)
+            continue
+        if opt in ('-l', '--trainlength'):
+            if not (arg.isdigit() and (0 <= int(trainstart) + int(arg) <= num_of_sents)):
+                print "wrong argument type for ", opt, ", will use default value "
+                continue
+            trainlength = int(arg)
 
     training_set = sents[:50000]
     testing_set = sents[50001:50003]
