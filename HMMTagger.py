@@ -9,8 +9,9 @@ class HMMTagger(object):
 	global UNK
 	UNK = "UNK"
 
-	def __init__(self, training_sents, n=2):
+	def __init__(self, training_sents, n=2, smoothing=None):
 		self.n = n
+		self.smoothing = smoothing
 		self.tagged_sents = self.addStartAndEndMarkers(training_sents)
 		self.train()
 
@@ -53,10 +54,10 @@ class HMMTagger(object):
 			res += [(END_TAG, END_TAG)]
 		return res
 
-	def get_transition_probability(self, prev_tag, tag, option=None):
+	def get_transition_probability(self, prev_tag, tag):
 		prev_tag_count = self.transition_frequencies[prev_tag].N()
 		bigram_count = self.transition_frequencies[prev_tag].freq(tag) * prev_tag_count
-		if option=="LAP":
+		if self.smoothing == "LAP":
 			return (bigram_count + 1 ) / (1.0 * prev_tag_count + self.lexicon_size)
 		else:
 			return self.transition_probabilities[prev_tag].prob(tag)
@@ -73,12 +74,12 @@ class HMMTagger(object):
 				if prev:
 
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
-					transition_prob = self.get_transition_probability(best_prev_tag, tag, "LAP")
+					transition_prob = self.get_transition_probability(best_prev_tag, tag)
 					vit[tag] = prev[best_prev_tag] * transition_prob * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = best_prev_tag
 
 				else:
-					transition_prob = self.get_transition_probability(START_TAG, tag, "LAP")
+					transition_prob = self.get_transition_probability(START_TAG, tag)
 					vit[tag] = transition_prob * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
 

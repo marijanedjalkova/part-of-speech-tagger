@@ -6,11 +6,13 @@ from nltk.tokenize import word_tokenize
 def main():
     sents = brown.tagged_sents()
     # 57340 sentences
-    training_set = sents[:5000]
-    testing_set = sents[:2]
-    t = HMMTagger(training_set)
+    training_set = sents[:50000]
+    testing_set = sents[50001:50003]
+    t = HMMTagger(training_set, smoothing="LAP")
+
     test_words = [[meow for (meow,_) in sentence] for sentence in testing_set]
     test_tag_sents = [[tag for (_,tag) in sentence] for sentence in testing_set]
+
     new_tag_sents = t.tag_sents(test_words)
     print compare(new_tag_sents, test_tag_sents), "%"
 
