@@ -87,11 +87,7 @@ class HMMTagger(object):
 				if prev:
 
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
-
 					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
-					if best_prev_tag!="BE" or vit[tag]>0.0:
-						print "probably ", tag
-
 					back[tag] = best_prev_tag
 
 				else:
@@ -103,14 +99,11 @@ class HMMTagger(object):
 
 	def viterbi(self, words_to_tag):
 		""" Viterbi algorithm """
-		print "tagging ", words_to_tag
 		res = [] # a list of dicts denoting probability of best path to get to state q after scanning input up to pos i
 		backpointers = [] # a list of dicts
 
 		for wordindex in range(len(words_to_tag)):
 			current_word = words_to_tag[wordindex]
-			print "col for ", current_word
-			# TODO mb check here that the word is unknown?
 			if self.is_unknown(current_word):
 				current_word = UNK
 			if wordindex == 0:
@@ -132,8 +125,6 @@ class HMMTagger(object):
 			if pr.prob( word ) > 0:
 				return False
 		return True
-
-
 
 	def construct_solution(self, back, prev):
 		""" Constructs solution by following the back pointers on a ready viterbi table """
@@ -157,16 +148,12 @@ class HMMTagger(object):
 
 		for prevtag in prev.keys():
 			# find the maximum probability
-			prt = prev[ prevtag ]
-			tr_prob = self.transition_probabilities[prevtag].prob(tag)
-			prob = prt * tr_prob
+			prob = prev[ prevtag ] * self.transition_probabilities[prevtag].prob(tag)
 
 			if  curr_word:
-				pr = self.emission_probabilities[ tag ].prob( curr_word )
-				prob *= pr
+				prob *= self.emission_probabilities[ tag ].prob( curr_word )
 
 			if prob > best_prob:
-
 				best_prob = prob
 				best_prev = prevtag
 
@@ -186,9 +173,6 @@ class HMMTagger(object):
 			probability = self.emission_probabilities[tag]
 			if probability.prob(word) > 0:
 				return False
-		if word==UNK:
-			print "UNK cannot possibly be an unseen word!"
-			raise Exception
 		return True
 
 	def tag_sents(self, test_sents):
