@@ -2,13 +2,44 @@ from nltk.corpus import brown
 from HMMTagger import *
 from NGramTagger import NGramTagger
 from nltk.tokenize import word_tokenize
+import sys, getopt
+import numbers
 
-def main():
+
+def main(argv):
+    smoothing = "LAP"
+    trainstart = 0
+    trainlength = 5000
+
     sents = brown.tagged_sents()
     # 57340 sentences
+
+    if argv:
+        try:
+            opts, args = getopt.getopt(argv)
+        except getopt.GetoptError:
+            print 'Could not get arguments'
+            sys.exit(2)
+        for opt, arg in opts:
+            if opt == 'smoothing':
+                smoothing = arg
+                continue
+            if opt == 'trainstart':
+                if not (isinstance(arg, numbers.Number) and (0 <= arg <= (len(sents) - 1))):
+                    print "wrong argument type for ", opt, ", will use default value "
+                    continue
+                trainstart = arg
+            if opt == 'trainlength':
+                if not (isinstance(arg, numbers.Number) and (0 <= trainstart + arg <= len(sents))):
+                    print "wrong argument type for ", opt, ", will use default value "
+                    continue
+                trainlength = arg
+
+                
+
     training_set = sents[:50000]
     testing_set = sents[50001:50003]
-    t = HMMTagger(training_set, smoothing="LAP")
+    t = HMMTagger(training_set, smoothing=smoothing)
 
     test_words = [[meow for (meow,_) in sentence] for sentence in testing_set]
     test_tag_sents = [[tag for (_,tag) in sentence] for sentence in testing_set]
@@ -50,4 +81,4 @@ def compare(detected_tags_sents, original_tags_sents):
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
