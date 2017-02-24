@@ -51,30 +51,6 @@ class HMMTagger(object):
 			res += [(END_TAG, END_TAG)]
 		return res
 
-	def get_start_q(self, word):
-		""" The first column of viterbi algorithm """
-		# TODO this is not currently used, so can be removed.
-		# Generalisartion of this is in viterbi_col()
-		start_viterbi = {}
-		start_back = {}
-		for tag in self.tagset:
-			if tag != START_TAG:
-				start_viterbi[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
-				start_back[tag] = START_TAG
-		return (start_viterbi, start_back)
-
-	def get_word_viterbi(self, word, prev):
-		""" nth column for the viterbi table where n!=0 """
-		# TODO this is not currently used, so can be removed.
-		# Generalisartion of this is in viterbi_col()
-		current_viterbi = {}
-		current_back = {}
-		for tag in self.tagset:
-			if tag != START_TAG:
-				best_prev_tag = self.get_prev_tag(tag, prev, word)
-				current_viterbi[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
-				current_back[tag] = best_prev_tag
-		return (current_viterbi, current_back)
 
 	def viterbi_col(self, word, prev=None):
 		""" General algorithm for a viterbi table column.
