@@ -14,6 +14,7 @@ class HMMTagger(object):
 		self.tagged_sents = self.addStartAndEndMarkers(training_sents)
 		self.train()
 
+
 	def train(self):
 		""" Construct the conditional frequencies and probabilities """
 		#extract tags from sentences
@@ -37,6 +38,7 @@ class HMMTagger(object):
 		""" Replaces unique words with the UNK label """
 		start = time.time()
 		word_frequencies = FreqDist([word for (word, _) in self.tagged_sents])
+		self.lexicon_size = len(word_frequencies)
 		hap = set(word_frequencies.hapaxes())
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
@@ -51,6 +53,11 @@ class HMMTagger(object):
 			res += [(END_TAG, END_TAG)]
 		return res
 
+	def laplace(self, prob, prev_tag):
+		if prob == 0:
+			prev_tag_count = self.transition_frequencies[prev_tag].N()
+			return 1.0 / (prev_tag_count + self.lexicon_size)
+		return prob
 
 	def viterbi_col(self, word, prev=None):
 		""" General algorithm for a viterbi table column.
@@ -63,11 +70,13 @@ class HMMTagger(object):
 				if prev:
 
 					best_prev_tag = self.get_prev_tag(tag, prev, word)
-					vit[tag] = prev[best_prev_tag] * self.transition_probabilities[best_prev_tag].prob(tag) * self.emission_probabilities[ tag ].prob( word )
+					transition_prob = self.laplace(self.transition_probabilities[best_prev_tag].prob(tag), best_prev_tag)
+					vit[tag] = prev[best_prev_tag] * transition_prob * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = best_prev_tag
 
 				else:
-					vit[tag] = self.transition_probabilities[START_TAG].prob(tag) * self.emission_probabilities[ tag ].prob( word )
+					transition_prob = self.laplace(self.transition_probabilities[START_TAG].prob(tag), START_TAG)
+					vit[tag] = transition_prob * self.emission_probabilities[ tag ].prob( word )
 					back[tag] = START_TAG
 
 		return (vit, back)
