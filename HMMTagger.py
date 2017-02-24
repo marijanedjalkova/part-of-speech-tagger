@@ -13,7 +13,7 @@ class HMMTagger(object):
 	def __init__(self, training_sents, n=2, smoothing=None):
 		self.n = n
 		self.smoothing = smoothing
-		self.tagged_sents = self.addStartAndEndMarkers(training_sents, True) # this takes a lot of time
+		self.tagged_sents = self.addStartAndEndMarkers(training_sents, False) # this takes a lot of time
 		self.train() # this takes almost 4 seconds
 
 
@@ -60,7 +60,7 @@ class HMMTagger(object):
 		return res
 
 	def get_merged_tag(self, tag):
-		return tag[:2] if tag.startswith("JJ") else tag
+		return tag[:2] if tag.startswith(("NN")) else tag
 
 	def get_transition_probability(self, prev_tag, tag):
 		prev_tag_count = self.transition_frequencies[prev_tag].N()
