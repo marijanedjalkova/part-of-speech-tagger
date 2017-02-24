@@ -119,7 +119,7 @@ class HMMTagger(object):
 		for the current word.
 		Called for every word and every tag """
 		# TODO higher order
-		best_prev = None
+		best_prev = prev.keys()[0] # assign at least something to avoid None exception
 		best_prob = 0.0
 
 		for prevtag in prev.keys():
@@ -133,9 +133,6 @@ class HMMTagger(object):
 				best_prob = prob
 				best_prev = prevtag
 
-		if best_prev == None:
-			# assign at least something to avoid None exception
-			best_prev = prev.keys()[0]
 		return best_prev
 
 	def tag_sents(self, test_sents):
