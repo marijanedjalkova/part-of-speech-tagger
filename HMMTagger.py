@@ -21,20 +21,16 @@ class HMMTagger(object):
 		""" Construct the conditional frequencies and probabilities """
 		#extract tags from sentences
 
-		tags = [tag for (_,tag) in self.tagged_sents]
-		self.tagset = set(tags)
+		tags = [tag for (_,tag) in self.tagged_sents]		
 		self.replaceUnique()
-
 		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
+		self.tagset_size = len(self.emission_frequencies.conditions())
 
 		# emission - probability that a certain tag is a certain word
 		# e.g. probability that a VB is 'race'
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
-
-		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
-
+		self.transition_frequencies = ConditionalFreqDist(bigrams(tags))
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
-
 		self.word_tag_frequencies = ConditionalFreqDist(self.tagged_sents)
 
 	def replaceUnique(self):
@@ -55,9 +51,11 @@ class HMMTagger(object):
 		return res
 
 	def get_transition_probability(self, prev_tag, tag):
-		prev_tag_count = self.transition_frequencies[prev_tag].N()
-		bigram_count = self.transition_frequencies[prev_tag].freq(tag) * prev_tag_count
+		""" Returns probability of prev_tag being followed by tag.
+		 Performs smoothing if specified in the command line."""
 		if self.smoothing == "LAP":
+			prev_tag_count = self.transition_frequencies[prev_tag].N()
+			bigram_count = self.transition_frequencies[prev_tag].freq(tag) * prev_tag_count
 			return (bigram_count + 1 ) / (1.0 * prev_tag_count + self.lexicon_size)
 		else:
 			return self.transition_probabilities[prev_tag].prob(tag)
@@ -116,7 +114,6 @@ class HMMTagger(object):
 	def construct_solution(self, back, prev):
 		""" Constructs solution by following the back pointers on a ready viterbi table """
 		current_best_tag = self.get_prev_tag(END_TAG, prev)
-
 		best_seq = [ END_TAG, current_best_tag ]
 		for p in back:
 			to_append = p[current_best_tag]
@@ -129,10 +126,8 @@ class HMMTagger(object):
 		""" Finds a previous tag A for the current tag B s.t. the probability of AB was the highest
 		for the current word.
 		Called for every word and every tag """
-		# TODO higher order
 		best_prev = prev.keys()[0] # assign at least something to avoid None exception
 		best_prob = 0.0
-
 		for prevtag in prev.keys():
 			# find the maximum probability
 			prob = prev[ prevtag ] * self.transition_probabilities[prevtag].prob(tag)
