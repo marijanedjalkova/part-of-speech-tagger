@@ -56,6 +56,7 @@ def merge(sents, merging):
                     break
             new_sent.append(new_tuple)
         new_sents.append(new_sent)
+    print "Tags merged: "
     print sorted(stats.items(), key=operator.itemgetter(1))[::-1]
     return new_sents
 
@@ -70,47 +71,27 @@ def process_data(sents, merging):
     return (training_set, test_words, test_tag_sents)
 
 def do_experiment(sents, merging):
+    print "----------------------------"
     training_set, test_words, test_tag_sents = process_data(sents, merging)
     t = HMMTagger(training_set, smoothing=smoothing)
     new_tag_sents = t.tag_sents(test_words)
-    print ""
-    print "Merging: ", merging
     print "Tagset size:", len(t.tagset)
     print "Overall accuracy: ", compare(new_tag_sents, test_tag_sents), "%"
     print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
     print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
-    print "----------------------------"
+    print "Accuracy for verbs: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "VB"), "%"
+
 
 def main(argv):
     sents = brown.tagged_sents()
     num_of_sents = 57340
     # I know this is a magic number but len(sents) takes too long.
     process_args(argv, num_of_sents)
+    experiments = [["BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"],
+                    ["NN"], ["VB"], ["JJ"], ["NP"], ["BE"], ["NN", "VB", "JJ"], ["WRB", "WPS", "+"], []]
+    for e in experiments:
+        do_experiment(sents, e)
 
-    do_experiment(sents, ("BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("BE", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("BE", "NN", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("BE", "NN", "JJ", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("BE", "NN", "JJ", "DT", "FW", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_experiment(sents, ("BE", "NN", "JJ", "HV", "MD", "NP", "VB", "+"))
-
-    do_experiment(sents, ())
-
-
-def plain_to_sents(tags):
-    """ Parses a list of tags where sentences are separated by start and end tags into list of lists"""
-    res = []
-    small = []
-    for t in tags:
-        if t==START_TAG:
-            continue
-        if t==END_TAG:
-            res.append(small)
-            small = []
-            continue
-        small.append(t)
-    return res
 
 def sents_to_plain(sents):
     """ Jois a list of lists into a plain list """
@@ -142,6 +123,9 @@ def measure_accuracy_for_class(detected_tags_sents, original_tags_sents, tag_cla
             total +=1
             if detected == original:
                 res+=1
+    if total == 0:
+        print "no occurrences!"
+        return 1
     return (res*100.0)/(total*1.0)
 
 

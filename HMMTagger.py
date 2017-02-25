@@ -32,10 +32,10 @@ class HMMTagger(object):
 		self.emission_probabilities = ConditionalProbDist(self.emission_frequencies, MLEProbDist)
 
 		self.transition_frequencies = ConditionalFreqDist(bigrams(tags)) # TODO change to ngrams
+
 		self.transition_probabilities = ConditionalProbDist(self.transition_frequencies, MLEProbDist)
 
 		self.word_tag_frequencies = ConditionalFreqDist(self.tagged_sents)
-		print "Model trained."
 
 	def replaceUnique(self):
 		""" Replaces unique words with the UNK label """
