@@ -13,7 +13,7 @@ class HMMTagger(object):
 	def __init__(self, training_sents, n=2, smoothing=None):
 		self.n = n
 		self.smoothing = smoothing
-		self.tagged_sents = self.addStartAndEndMarkers(training_sents, False) # this takes a lot of time
+		self.tagged_sents = self.addStartAndEndMarkers(training_sents) # this takes a lot of time
 		self.train() # this takes almost 4 seconds
 
 
@@ -22,7 +22,7 @@ class HMMTagger(object):
 		#extract tags from sentences
 
 		tags = [tag for (_,tag) in self.tagged_sents]
-
+		self.tagset = set(tags)
 		self.replaceUnique()
 
 		self.emission_frequencies = ConditionalFreqDist([tup[::-1] for tup in self.tagged_sents])
@@ -45,22 +45,14 @@ class HMMTagger(object):
 		res = [(UNK,tag) if word in hap else (word,tag) for (word,tag) in self.tagged_sents]
 		self.tagged_sents = res
 
-	def addStartAndEndMarkers(self, training_sents, merge):
+	def addStartAndEndMarkers(self, training_sents):
 		""" returns a flat list of tokens """
 		res = []
 		for sent in training_sents:
 			res += [(START_TAG, START_TAG)]
-			if merge:
-				for (word,tag) in sent:
-					ntag = self.get_merged_tag(tag)
-					res += [(word, ntag)]
-			else:
-				res += sent
+			res += sent
 			res += [(END_TAG, END_TAG)]
 		return res
-
-	def get_merged_tag(self, tag):
-		return tag[:2] if tag.startswith(("NN")) else tag
 
 	def get_transition_probability(self, prev_tag, tag):
 		prev_tag_count = self.transition_frequencies[prev_tag].N()
