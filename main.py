@@ -2,6 +2,7 @@ from nltk.corpus import brown
 from HMMTagger import *
 import sys, getopt
 import time
+import operator
 
 smoothing = "LAP"
 trainstart = 0
@@ -38,18 +39,24 @@ def process_args(argv, num_of_sents):
 
 def merge(sents, merging):
     new_sents = []
+    stats = {}
+    for t in set(merging):
+        stats[t]=0
     for sent in sents:
         new_sent = []
         for (w,t) in sent:
             new_tuple = (w,t)
             if "+" in merging and "+" in t:
                 new_tuple = (w, t.split("+")[0])
+                stats["+"] += 1
             for m in merging:
                 if t.startswith(m):
+                    stats[m]+=1
                     new_tuple = (w,m)
                     break
             new_sent.append(new_tuple)
         new_sents.append(new_sent)
+    print sorted(stats.items(), key=operator.itemgetter(1))[::-1]
     return new_sents
 
 def process_data(sents, merging):
@@ -62,15 +69,17 @@ def process_data(sents, merging):
     test_tag_sents = [[tag for (_,tag) in sentence] for sentence in testing_set]
     return (training_set, test_words, test_tag_sents)
 
-def do_model(sents, merging):
+def do_experiment(sents, merging):
     training_set, test_words, test_tag_sents = process_data(sents, merging)
     t = HMMTagger(training_set, smoothing=smoothing)
-    print "tagset:", len(t.tagset)
     new_tag_sents = t.tag_sents(test_words)
+    print ""
     print "Merging: ", merging
+    print "Tagset size:", len(t.tagset)
     print "Overall accuracy: ", compare(new_tag_sents, test_tag_sents), "%"
     print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
     print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
+    print "----------------------------"
 
 def main(argv):
     sents = brown.tagged_sents()
@@ -78,8 +87,15 @@ def main(argv):
     # I know this is a magic number but len(sents) takes too long.
     process_args(argv, num_of_sents)
 
-    do_model(sents, ("BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    do_model(sents, ())
+    do_experiment(sents, ("BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("BE", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("BE", "NN", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("BE", "NN", "JJ", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("BE", "NN", "JJ", "DT", "FW", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_experiment(sents, ("BE", "NN", "JJ", "HV", "MD", "NP", "VB", "+"))
+
+    do_experiment(sents, ())
 
 
 def plain_to_sents(tags):
