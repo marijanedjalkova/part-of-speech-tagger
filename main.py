@@ -6,10 +6,11 @@ import operator
 
 smoothing = "LAP"
 trainstart = 0
-trainlength = 5000
-testlength = 2
+trainlength = 50000
+testlength = 500
 
 def process_args(argv, num_of_sents):
+    """ Processes args given in command line. """
     global smoothing, trainstart, trainlength, testlength
     try:
         opts, args = getopt.getopt(argv, "s:t:l:e:",["smoothing=", "trainstart=", "trainlength=", "testing="])
@@ -38,6 +39,7 @@ def process_args(argv, num_of_sents):
             continue
 
 def merge(sents, merging):
+    """ Performs tag merging on the whole sentence collection. """
     new_sents = []
     stats = {}
     for t in set(merging):
@@ -51,7 +53,8 @@ def merge(sents, merging):
                 stats["+"] += 1
             for m in merging:
                 if t.startswith(m):
-                    stats[m]+=1
+                    if t!=m:
+                        stats[m]+=1
                     new_tuple = (w,m)
                     break
             new_sent.append(new_tuple)
@@ -71,34 +74,35 @@ def process_data(sents, merging):
     return (training_set, test_words, test_tag_sents)
 
 def do_experiment(sents, merging):
+    """ Tags the testing set and prints out some stats. """
     print "----------------------------"
     training_set, test_words, test_tag_sents = process_data(sents, merging)
     t = HMMTagger(training_set, smoothing=smoothing)
     new_tag_sents = t.tag_sents(test_words)
-    print "Tagset size:", len(t.tagset)
+    print "Tagset size:", t.tagset_size
     print "Overall accuracy: ", compare(new_tag_sents, test_tag_sents), "%"
     print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
     print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
     print "Accuracy for verbs: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "VB"), "%"
-
 
 def main(argv):
     sents = brown.tagged_sents()
     num_of_sents = 57340
     # I know this is a magic number but len(sents) takes too long.
     process_args(argv, num_of_sents)
+    # these are list of possible tag merges
     experiments = [["BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"],
                     ["NN"], ["VB"], ["JJ"], ["NP"], ["BE"], ["NN", "VB", "JJ"], ["WRB", "WPS", "+"], []]
-    for e in experiments:
-        do_experiment(sents, e)
-
+    for i in range(len(experiments)):
+        print "experiment ", i, " out of ", len(experiments)
+        do_experiment(sents, experiments[i])
 
 def sents_to_plain(sents):
     """ Jois a list of lists into a plain list """
     return [j for i in sents for j in i]
 
-
 def compare(detected_tags_sents, original_tags_sents):
+    """ Compares a sequence of received tags with the original sequence """
     res = 0
     total = 0
     original_tags_lst = sents_to_plain(original_tags_sents)
@@ -114,12 +118,13 @@ def compare(detected_tags_sents, original_tags_sents):
     return (res*100.0)/(total*1.0)
 
 def measure_accuracy_for_class(detected_tags_sents, original_tags_sents, tag_class):
+    """ Measures correctness for a certain tag. """
     res = 0
     total = 0
     original_tags_lst = sents_to_plain(original_tags_sents)
     detected_tags_lst = sents_to_plain(detected_tags_sents)
     for detected, original in zip(detected_tags_lst, original_tags_lst):
-        if original==tag_class:
+        if original.startswith(tag_class):
             total +=1
             if detected == original:
                 res+=1
@@ -127,7 +132,6 @@ def measure_accuracy_for_class(detected_tags_sents, original_tags_sents, tag_cla
         print "no occurrences!"
         return 1
     return (res*100.0)/(total*1.0)
-
 
 if __name__ == '__main__':
     main(sys.argv[1:])
