@@ -62,28 +62,24 @@ def process_data(sents, merging):
     test_tag_sents = [[tag for (_,tag) in sentence] for sentence in testing_set]
     return (training_set, test_words, test_tag_sents)
 
+def do_model(sents, merging):
+    training_set, test_words, test_tag_sents = process_data(sents, merging)
+    t = HMMTagger(training_set, smoothing=smoothing)
+    print "tagset:", len(t.tagset)
+    new_tag_sents = t.tag_sents(test_words)
+    print "Merging: ", merging
+    print "Overall accuracy: ", compare(new_tag_sents, test_tag_sents), "%"
+    print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
+    print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
 
 def main(argv):
     sents = brown.tagged_sents()
     num_of_sents = 57340
     # I know this is a magic number but len(sents) takes too long.
     process_args(argv, num_of_sents)
-    training_set, test_words, test_tag_sents = process_data(sents, ("BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
-    t = HMMTagger(training_set, smoothing=smoothing)
-    print t.tagset
-    new_tag_sents = t.tag_sents(test_words)
-    #print new_tag_sents
-    print "all merging: ", compare(new_tag_sents, test_tag_sents), "%"
-    print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
-    print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
 
-    training_set, test_words, test_tag_sents = process_data(sents, ())
-    t = HMMTagger(training_set, smoothing=smoothing)
-    new_tag_sents = t.tag_sents(test_words)
-    #print new_tag_sents
-    print "No merging: ", compare(new_tag_sents, test_tag_sents), "%"
-    print "Accuracy for nouns: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "NN"), "%"
-    print "Accuracy for adjectives: ", measure_accuracy_for_class(new_tag_sents, test_tag_sents, "JJ"), "%"
+    do_model(sents, ("BE", "NN", "JJ", "DT", "FW", "HV", "MD", "NP", "VB", "WDT", "WPS", "WRB", "+"))
+    do_model(sents, ())
 
 
 def plain_to_sents(tags):
